@@ -1,9 +1,9 @@
-__pycache__/
-*.pyc
-.env
 es-data/
 mongo-data/
 logs/
+__pycache__/
+*.pyc
+.env
 .idea/
 .vscode/
 venv/
