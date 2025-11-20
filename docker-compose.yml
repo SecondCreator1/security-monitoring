@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./es-data:/usr/share/elasticsearch/data
+    networks:
+      - elk-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-net
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logs/csv:/data/logs/csv
+      - ./logs/json:/data/logs/json
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-net
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+    networks:
+      - elk-net
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - elk-net
+
+  webapp:
+    build: ./webapp
+    container_name: webapp
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs/csv:/app/logs/csv
+      - ./logs/json:/app/logs/json
+    depends_on:
+      - elasticsearch
+      - mongodb
+      - redis
+    networks:
+      - elk-net
+
+networks:
+  elk-net:
+    driver: bridge
