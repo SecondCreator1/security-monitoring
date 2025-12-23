@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from elasticsearch import Elasticsearch
 import os
 from datetime import datetime, timedelta
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 app.secret_key = 'CHANGE_THIS_TO_A_SECRET_FOR_FLASH_MESSAGES'
@@ -17,6 +18,15 @@ client = MongoClient(MONGO_URI)
 db = client['security_monitoring']
 uploads_collection = db['uploads']
 es = Elasticsearch(ES_HOST)
+
+#------Alert-----
+@app.route('/alerts', methods=['GET'])
+def get_alerts():
+    alerts = []
+    for doc in db['alerts'].find({}).sort('timestamp', -1).limit(100):
+        doc['_id'] = str(doc['_id'])
+        alerts.append(doc)
+    return jsonify({"alerts": alerts}), 200
 
 # ----- Dashboard -----
 @app.route("/", methods=["GET"])
@@ -138,6 +148,11 @@ def get_stats():
         "uploads_count": uploads_count
     }
     return jsonify(stats), 200
+
+@app.route('/alertspage', methods=['GET'])
+def alerts_page():
+    return render_template('alerts.html')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000)
