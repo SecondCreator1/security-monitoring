@@ -72,6 +72,16 @@ services:
     networks:
       - elk-net
 
+  alertworker:
+    build: ./webapp
+    container_name: alertworker
+    command: ["python", "-u", "alert_worker.py"]
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - elk-net
+
 networks:
   elk-net:
     driver: bridge
