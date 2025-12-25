@@ -1,142 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Security Logs Dashboard</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <title>Security & Authentication Monitoring</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap, Icons & Chart.js -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #050814;
+            color: #f5f5f5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #050814, #111827);
+            border-bottom: 1px solid #1f2937;
+        }
+        .brand-badge {
+            font-size: 0.75rem;
+            letter-spacing: .08em;
+        }
+        .card {
+            background: #0b1120;
+            border: 1px solid #1f2937;
+            border-radius: 0.5rem;
+            color: #e5e7eb;
+        }
+        .card h5 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #9ca3af;
+        }
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .kpi-label-critical {
+            color: #f87171;
+        }
+        .kpi-label-warning {
+            color: #fbbf24;
+        }
+        .kpi-label-ok {
+            color: #4ade80;
+        }
+        .table-dark-custom {
+            --bs-table-bg: #020617;
+            --bs-table-border-color: #1f2937;
+        }
+        .badge-critical {
+            background-color: #b91c1c;
+        }
+        .badge-warning {
+            background-color: #b45309;
+        }
+        .badge-info {
+            background-color: #1d4ed8;
+        }
+        .section-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: #9ca3af;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="mb-0 text-center flex-grow-1">Security Dashboard</h1>
-        <a href="/alertspage" class="btn btn-sm btn-outline-danger ms-3">
-            View Alerts
+<nav class="navbar navbar-expand-lg navbar-dark px-3 px-md-4">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <span class="fw-bold">SecMon</span>
+            <span class="ms-2 badge rounded-pill bg-primary-subtle text-uppercase brand-badge">
+                Security &amp; Auth Logs
+            </span>
         </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse mt-2 mt-lg-0" id="mainNav">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path == '/' %} active{% endif %}" href="/">
+                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path.startswith('/search') %} active{% endif %}" href="/searchpage">
+                        <i class="bi bi-search me-1"></i> Search
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path.startswith('/upload') %} active{% endif %}" href="/upload">
+                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Logs
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path.startswith('/alerts') %} active{% endif %} text-danger fw-semibold"
+                       href="/alertspage">
+                        <i class="bi bi-shield-exclamation me-1"></i> Alerts
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
+</nav>
 
-    <!-- KPIs section -->
-    <div class="row text-center mb-4" id="kpi-section">
-        <div class="col">
-            <div class="card p-3 mb-3 shadow">
+<div class="container-fluid mt-4 px-3 px-md-4">
+    <!-- KPIs -->
+    <div class="row g-3 mb-3 text-center">
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100">
                 <h5>Total Logs</h5>
-                <h2 id="kpi-total">...</h2>
+                <div class="kpi-value" id="kpi-total">...</div>
+                <small class="text-secondary">Indexed</small>
             </div>
         </div>
-        <div class="col">
-            <div class="card p-3 mb-3 shadow">
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100">
                 <h5>Logs Today</h5>
-                <h2 id="kpi-today">...</h2>
+                <div class="kpi-value" id="kpi-today">...</div>
+                <small class="text-secondary">Last 24h</small>
             </div>
         </div>
-        <div class="col">
-            <div class="card p-3 mb-3 shadow">
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100">
                 <h5>Error Logs</h5>
-                <h2 id="kpi-errors">...</h2>
+                <div class="kpi-value kpi-label-warning" id="kpi-errors">...</div>
+                <small class="text-secondary">ERROR / CRITICAL</small>
             </div>
         </div>
-        <div class="col">
-            <div class="card p-3 mb-3 shadow">
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100">
                 <h5>Uploads</h5>
-                <h2 id="kpi-uploads">...</h2>
+                <div class="kpi-value kpi-label-ok" id="kpi-uploads">...</div>
+                <small class="text-secondary">Log files</small>
             </div>
         </div>
-        <div class="col">
-            <div class="card p-3 mb-3 shadow">
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100 border-danger">
                 <h5>Alerts Today</h5>
-                <h2 id="kpi-alerts">...</h2>
+                <div class="kpi-value kpi-label-critical" id="kpi-alerts">...</div>
+                <small class="text-secondary">From rules engine</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="card p-3 h-100">
+                <h5>Last Critical</h5>
+                <div class="kpi-value fs-6" id="kpi-last-critical">—</div>
+                <small class="text-secondary">Alert timestamp</small>
             </div>
         </div>
     </div>
 
-    <!-- Chart.js section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow p-3">
-                <h5>Failed Logins Over Time</h5>
-                <canvas id="loginChart"></canvas>
+    <!-- Charts -->
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-6">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="section-title">Failed Logins Over Time</span>
+                    <span class="badge rounded-pill badge-info">Authentication</span>
+                </div>
+                <canvas id="loginChart" height="140"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="section-title">Alerts By Severity (Today)</span>
+                    <a href="/alertspage" class="btn btn-sm btn-outline-danger">
+                        View Alerts
+                    </a>
+                </div>
+                <canvas id="alertsChart" height="140"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Recent uploads table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow p-3">
-                <h5>Recent Uploaded Files</h5>
-                <table class="table" id="uploads-table">
+    <!-- Bottom row -->
+    <div class="row g-3">
+        <div class="col-12 col-xl-4">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="section-title">Recent Uploaded Files</span>
+                    <a href="/upload" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload
+                    </a>
+                </div>
+                <table class="table table-dark table-striped table-sm table-dark-custom mb-0"
+                       id="uploads-table">
                     <thead>
-                        <tr>
-                            <th>Filename</th>
-                            <th>Type</th>
-                            <th>Size (bytes)</th>
-                            <th>Date</th>
-                        </tr>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Date</th>
+                    </tr>
                     </thead>
-                    <tbody>
-                    <!-- Filled by JS -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
-    </div>
-
-    <!-- Kibana dashboard iframe -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card shadow p-3">
-                <h5>Kibana Security Dashboard</h5>
+        <div class="col-12 col-xl-8">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="section-title">Kibana Security Dashboard</span>
+                    <span class="badge rounded-pill bg-secondary">Elastic</span>
+                </div>
                 <iframe
                     src="http://localhost:5601/app/dashboards#/view/12415d2a-e26e-4eda-8f3f-2d0051c9fb7a?_g=(refreshInterval:(pause:!t,value:60000),time:(from:'2025-11-01T10:17:16.510Z',to:now))"
-                    style="width: 100%; height: 600px; border: none;">
+                    style="width: 100%; height: 420px; border: none; border-radius: 0.5rem;">
                 </iframe>
             </div>
         </div>
     </div>
 </div>
 
-<!-- JS for loading data and chart -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
-    // KPIs
     fetch('/stats').then(r => r.json()).then(function(data) {
-        document.getElementById('kpi-total').textContent = data.total_logs;
-        document.getElementById('kpi-today').textContent = data.today_logs;
-        document.getElementById('kpi-errors').textContent = data.error_logs;
+        document.getElementById('kpi-total').textContent   = data.total_logs;
+        document.getElementById('kpi-today').textContent   = data.today_logs;
+        document.getElementById('kpi-errors').textContent  = data.error_logs;
         document.getElementById('kpi-uploads').textContent = data.uploads_count;
-        document.getElementById('kpi-alerts').textContent = data.alerts_today;
+        document.getElementById('kpi-alerts').textContent  = data.alerts_today ?? '0';
     });
 
-    // Recent uploads
     fetch('/uploads').then(r => r.json()).then(function(data) {
         let body = "";
-        data.uploads.slice(0,5).forEach(u => {
-            body += `<tr><td>${u.filename}</td><td>${u.type}</td><td>${u.size}</td><td>${u.upload_date}</td></tr>`;
+        data.uploads.slice(0, 6).forEach(u => {
+            body += `<tr>
+                <td>${u.filename}</td>
+                <td>${u.type}</td>
+                <td>${u.size}</td>
+                <td>${u.upload_date}</td>
+            </tr>`;
         });
         document.querySelector("#uploads-table tbody").innerHTML = body;
     });
 
-    // Failed logins chart
-    fetch('/search?q=login_failure&size=100')
+    fetch('/search?q=login_failure&size=300')
         .then(r => r.json())
         .then(function(data) {
             let counts = {};
             data.results.forEach(d => {
                 if (!d.timestamp) return;
-                let date = d.timestamp.slice(0,10); // YYYY-MM-DD
+                let date = d.timestamp.slice(0, 10);
                 counts[date] = (counts[date] || 0) + 1;
             });
             let labels = Object.keys(counts).sort();
             let values = labels.map(x => counts[x]);
             new Chart(document.getElementById('loginChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Failed logins',
+                        data: values,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249,115,22,0.15)',
+                        tension: 0.25,
+                        fill: true,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' } },
+                        y: { ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        });
+
+    fetch('/alerts')
+        .then(r => r.json())
+        .then(function(data) {
+            const today = new Date().toISOString().slice(0, 10);
+            const counts = { CRITICAL: 0, ERROR: 0, WARNING: 0, INFO: 0 };
+            let lastCritical = null;
+
+            data.alerts.forEach(a => {
+                if (!a.timestamp) return;
+                if (!a.severity) a.severity = 'INFO';
+                const d = a.timestamp.slice(0, 10);
+                if (d === today) {
+                    if (counts[a.severity] !== undefined) {
+                        counts[a.severity] += 1;
+                    } else {
+                        counts.INFO += 1;
+                    }
+                }
+                if (a.severity === 'CRITICAL') {
+                    if (!lastCritical || a.timestamp > lastCritical) {
+                        lastCritical = a.timestamp;
+                    }
+                }
+            });
+
+            if (lastCritical) {
+                document.getElementById('kpi-last-critical').textContent = lastCritical;
+            }
+
+            const labels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO'];
+            const values = labels.map(l => counts[l]);
+            new Chart(document.getElementById('alertsChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Failed Logins',
                         data: values,
-                        backgroundColor: '#df4b4b'
+                        backgroundColor: [
+                            '#ef4444',
+                            '#fb923c',
+                            '#eab308',
+                            '#38bdf8'
+                        ]
                     }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' } },
+                        y: { ticks: { color: '#9ca3af', precision: 0 } }
+                    }
                 }
             });
         });
