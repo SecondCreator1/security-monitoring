@@ -19,7 +19,7 @@ db = client['security_monitoring']
 uploads_collection = db['uploads']
 es = Elasticsearch(ES_HOST)
 
-#------Alert-----
+# ------ Alerts API -----
 @app.route('/alerts', methods=['GET'])
 def get_alerts():
     alerts = []
@@ -37,10 +37,9 @@ def dashboard():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_page():
     if request.method == 'POST':
-        # DEBUG PRINTS for troubleshooting
         print("DEBUG -- request.files :", request.files)
         print("DEBUG -- request.form :", request.form)
-        # --------------------------------
+
         if 'file' not in request.files:
             flash("No file part")
             return redirect(url_for('upload_page'))
@@ -72,7 +71,7 @@ def upload_page():
             "upload_date": datetime.utcnow().isoformat() + "Z",
             "status": "uploaded"
         }
-        result = uploads_collection.insert_one(meta)
+        uploads_collection.insert_one(meta)
         flash(f"Upload successful: {uploaded_file.filename}")
         return redirect(url_for('upload_page'))
     return render_template('upload.html')
@@ -123,6 +122,7 @@ def get_stats():
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_start_iso = today_start.isoformat() + "Z"
+
     today_logs = es.count(
         index=es_index,
         body={
@@ -141,14 +141,22 @@ def get_stats():
     )["count"]
 
     uploads_count = uploads_collection.count_documents({})
+
+    # Alerts today (from MongoDB alerts collection)
+    alerts_today = db['alerts'].count_documents({
+        "timestamp": {"$gte": today_start_iso}
+    })
+
     stats = {
         "total_logs": total_logs,
         "today_logs": today_logs,
         "error_logs": error_logs,
-        "uploads_count": uploads_count
+        "uploads_count": uploads_count,
+        "alerts_today": alerts_today
     }
     return jsonify(stats), 200
 
+# ----- Alerts Page -----
 @app.route('/alertspage', methods=['GET'])
 def alerts_page():
     return render_template('alerts.html')
