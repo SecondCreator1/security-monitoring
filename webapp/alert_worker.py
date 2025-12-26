@@ -25,10 +25,13 @@ def process_event(event, rules):
         if rule["type"] == "action_match":
             field = rule["field"]
             if event.get(field) == rule["value"]:
-                ts = event.get(
-                    "timestamp",
-                    datetime.utcnow().isoformat() + "Z"
+                # Prefer @timestamp (real event time); fallback to timestamp or now
+                ts = (
+                    event.get("@timestamp")
+                    or event.get("timestamp")
+                    or datetime.utcnow().isoformat() + "Z"
                 )
+
                 alert = {
                     "timestamp": ts,
                     "username": event.get("username"),
@@ -67,3 +70,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

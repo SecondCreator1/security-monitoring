@@ -94,6 +94,19 @@
                         <i class="bi bi-shield-exclamation me-1"></i> Alerts
                     </a>
                 </li>
+                {% if session.get('user') %}
+                <li class="nav-item d-flex align-items-center ms-lg-3">
+                    <span class="nav-link disabled small text-secondary">
+                        <i class="bi bi-person-circle me-1"></i>
+                        {{ session['user']['username'] }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>

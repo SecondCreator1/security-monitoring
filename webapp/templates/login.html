@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login – Security Monitoring</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap + Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at top, #1f2937 0, #020617 45%, #000 100%);
+            color: #f9fafb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            min-height: 100vh;
+        }
+        .card-login {
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid #1f2937;
+            border-radius: 0.75rem;
+            color: #e5e7eb;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+        }
+        .brand-badge {
+            font-size: 0.75rem;
+            letter-spacing: .12em;
+        }
+        .form-control, .form-control:focus {
+            background-color: #020617;
+            color: #e5e7eb;
+            border-color: #374151;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 1px #2563eb;
+        }
+        .input-group-text {
+            background-color: #020617;
+            border-color: #374151;
+            color: #9ca3af;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #2563eb, #0891b2);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #1d4ed8, #0e7490);
+        }
+        .alert-auth {
+            background-color: rgba(185, 28, 28, 0.95);
+            color: #fee2e2;
+            border: 1px solid #7f1d1d;
+        }
+        a {
+            color: #60a5fa;
+        }
+        a:hover {
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body>
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-md-6 col-lg-4">
+
+            <!-- Brand / title -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center mb-2">
+                    <i class="bi bi-shield-lock-fill fs-2 text-primary me-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold fs-4">SecMon</div>
+                        <div class="text-secondary small">Security &amp; Auth Logs Dashboard</div>
+                    </div>
+                </div>
+                <div class="badge rounded-pill bg-primary-subtle text-uppercase brand-badge">
+                    Analyst Console Access
+                </div>
+            </div>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-auth py-2 small d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{{ message }}</div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Login card -->
+            <div class="card card-login p-4">
+                <h5 class="mb-3 text-center">Sign in to continue</h5>
+                <form method="post" action="{{ url_for('login', next=request.args.get('next')) }}">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Username</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input type="text" name="username" class="form-control" required
+                                   placeholder="admin">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Password</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input type="password" name="password" class="form-control" required
+                                   placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
+                    </button>
+                </form>
+                <div class="small text-secondary mt-2">
+                    Default admin: <code>admin / admin123</code> (stored in MongoDB, change for production).
+                </div>
+            </div>
+
+            <div class="text-center mt-3 small text-secondary">
+                &copy; 2025 SecMon – Security Monitoring Demo
+            </div>
+        </div>
+    </div>
+</div>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
