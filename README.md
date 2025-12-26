@@ -1,167 +1,250 @@
-# SecMon – Security & Authentication Monitoring
+# 🔐 SecMon – Security & Authentication Monitoring
 
-SecMon is a lightweight security log monitoring stack built on top of the ELK stack with a custom Flask web UI, a simple rules engine, and alert storage in MongoDB.
+SecMon is a lightweight **security log monitoring and alerting platform** built on top of the **ELK stack**, enhanced with a **custom Flask web UI**, a **simple rules engine**, and **MongoDB-backed alert storage**.
 
-It lets you:
-
-- Upload security logs (CSV/JSON) and index them into Elasticsearch.
-- Search and visualize login failures and other events.
-- Generate alerts from log events using custom rules stored in MongoDB.
-- View alerts and KPIs in a modern dashboard and embed Kibana for deep analysis.
+It is designed to help security teams and students **ingest, analyze, and respond to authentication and security events** in a clear, scalable, and containerized environment.
 
 ---
 
-## Architecture
+## ✨ Key Features
 
-Main components:
-
-- **Elasticsearch** – stores indexed log events and powers search.
-- **Logstash** – ingests CSV/JSON logs from mounted folders and pushes them into Elasticsearch and Redis.
-- **Redis** – queue (`log_events` list) for events to be processed by the alert worker.
-- **MongoDB** – stores alert rules and generated alerts (`security_monitoring` database).
-- **Flask webapp** (`/webapp`) – UI and API:
-  - Dashboard, search page, upload page, alerts page.
-  - Endpoints like `/search`, `/upload`, `/alerts`, `/stats`, `/uploads`.
-- **Alert worker** – background process (separate container) that reads events from Redis, applies rules, and inserts alerts into MongoDB.
-- **Kibana** – embedded dashboard for advanced Elasticsearch visualizations.
-
-Everything is orchestrated with **Docker Compose**.
+- 📥 Upload security logs (**CSV / JSON**) and index them into Elasticsearch  
+- 🔍 Search and visualize login failures and security-related events  
+- 🚨 Generate alerts from log events using custom rules stored in MongoDB  
+- 📊 Monitor KPIs and alerts in a modern web dashboard  
+- 📈 Embed Kibana dashboards for advanced analysis  
+- 🐳 Fully containerized architecture using Docker Compose  
 
 ---
 
-## Project structure
+## 🧱 Architecture
 
+SecMon is composed of the following main components:
+
+- **Elasticsearch**  
+  Stores indexed log events and powers fast search and aggregation.
+
+- **Logstash**  
+  Ingests CSV/JSON logs from mounted folders and pushes parsed events into:
+  - Elasticsearch
+  - Redis
+
+- **Redis**  
+  Acts as a queue (`log_events`) for events to be processed by the alert worker.
+
+- **MongoDB**  
+  Stores alert rules and generated alerts in the  
+  `security_monitoring` database.
+
+- **Flask Web Application (`/webapp`)**  
+  Provides UI and API endpoints:
+  - Dashboard
+  - Log upload
+  - Log search
+  - Alerts overview  
+  - API endpoints: `/search`, `/upload`, `/alerts`, `/stats`, `/uploads`
+
+- **Alert Worker**  
+  Background service (separate container) that:
+  - consumes events from Redis
+  - applies active alert rules
+  - inserts matching alerts into MongoDB
+
+- **Kibana**  
+  Embedded dashboard for advanced Elasticsearch visualizations.
+
+All components are orchestrated using **Docker Compose**.
+
+---
+
+## 📁 Project Structure
+
+```text
 .
 ├── docker-compose.yml
-├── es-data/ # Elasticsearch persistent data
+├── es-data/               # Elasticsearch persistent data
+├── mongo-data/            # MongoDB data files
 ├── logs/
-│ ├── csv/ # CSV log upload directory (mounted into Logstash & webapp)
-│ └── json/ # JSON log upload directory
+│   ├── csv/               # CSV log upload directory
+│   └── json/              # JSON log upload directory
 ├── logstash/
-│ └── pipeline/ # Logstash pipeline config(s)
-├── mongo-data/ # MongoDB data files
-├── README.md
-└── webapp/
-├── alert_worker.py
-├── app.py
-├── Dockerfile
-├── init_alert_rules.py
-├── push_test_event.py
-├── requirements.txt
-├── static/
-└── templates/
-
+│   └── pipeline/          # Logstash pipeline configurations
+├── webapp/
+│   ├── app.py             # Flask application
+│   ├── alert_worker.py    # Alert processing worker
+│   ├── init_alert_rules.py
+│   ├── push_test_event.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── static/
+│   └── templates/
+└── README.md
+```
 
 ---
 
-## Getting started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Docker
+- Docker  
 - Docker Compose v2 (or `docker-compose`)
 
-### 1. Clone the repository
+---
 
+### 1️⃣ Clone the Repository
+
+```bash
 git clone https://github.com/SecondCreator1/security-monitoring
 cd security-monitoring
-
-
-### 2. Start the stack
-
-docker compose up --build
-
-
-This will start:
-
-- `elasticsearch` on `localhost:9200`
-- `kibana` on `localhost:5601`
-- `mongodb` on `localhost:27017`
-- `redis` on `localhost:6379`
-- `webapp` (Flask UI) on `localhost:8000`
-- `alertworker` (rules engine worker, no exposed port)
+```
 
 ---
 
-## Using the application
+### 2️⃣ Start the Stack
 
-### Web dashboard
+```bash
+docker compose up --build
+```
+
+This will start the following services:
+
+| Service        | URL / Port |
+|---------------|------------|
+| Elasticsearch | http://localhost:9200 |
+| Kibana        | http://localhost:5601 |
+| MongoDB       | localhost:27017 |
+| Redis         | localhost:6379 |
+| Web App       | http://localhost:8000 |
+| Alert Worker  | Internal |
+
+---
+
+## 🖥️ Using the Application
+
+### 📊 Web Dashboard
 
 Open:
+
+```
 http://localhost:8000/
+```
 
-Main features:
+The dashboard provides:
 
-- **KPIs**: total logs, logs today, error logs, uploads, alerts today, last critical alert.
-- **Failed Logins Over Time**: line chart of `login_failure` events over time using Elasticsearch data.
-- **Alerts By Severity (All Time)**: bar chart aggregating all alerts from MongoDB by severity.
-- **Recent Uploaded Files**: table of latest uploaded log files.
-- **Kibana Dashboard**: embedded iframe pointing to a Kibana dashboard.
+- **KPIs**
+  - Total logs
+  - Logs today
+  - Error logs
+  - Uploaded files
+  - Alerts today
+  - Last critical alert
 
-### Upload logs
+- **Failed Logins Over Time**
+  - Line chart based on `login_failure` events
 
-Go to **Upload Logs** or directly:
+- **Alerts by Severity**
+  - Aggregation of alerts stored in MongoDB
 
-http://localhost:8000/upload
+- **Recent Uploaded Files**
+  - List of the latest ingested log files
 
-
-Upload CSV/JSON log files that match your Logstash pipeline format. Files are stored under `logs/csv` or `logs/json` and picked up by Logstash, which indexes them into Elasticsearch and pushes parsed events into Redis.
-
-### Search logs
-
-Go to **Search** (`/searchpage`) to run queries. The UI calls `/search?q=...` which proxies to Elasticsearch.
-
-### Alerts
-
-The `/alerts` endpoint returns alert documents from MongoDB. The dashboard aggregates them client-side to show alert counts by severity and the most recent critical alert.
-
-The alert worker:
-
-- Listens to `log_events` in Redis.
-- Loads active rules from `security_monitoring.alert_rules`.
-- Inserts matching alerts into `security_monitoring.alerts`.
+- **Embedded Kibana Dashboard**
+  - Advanced Elasticsearch visualizations
 
 ---
 
-## Development
+### 📤 Upload Logs
 
-### Run commands inside containers
+Access:
 
-Examples:
+```
+http://localhost:8000/upload
+```
 
-Tail webapp logs
+- Upload CSV or JSON files matching the Logstash pipeline format  
+- Files are stored in `logs/csv` or `logs/json`  
+- Logstash automatically ingests and indexes them
+
+---
+
+### 🔎 Search Logs
+
+Use the search page:
+
+```
+/searchpage
+```
+
+The UI sends queries to:
+
+```
+/search?q=...
+```
+
+which proxies requests to Elasticsearch.
+
+---
+
+### 🚨 Alerts
+
+- Alerts are retrieved from MongoDB via the `/alerts` endpoint  
+- The dashboard aggregates alerts by severity and highlights the most recent critical alert  
+
+#### Alert Processing Flow
+
+1. Logstash pushes events to Redis  
+2. Alert worker listens to the `log_events` queue  
+3. Active rules are loaded from `security_monitoring.alert_rules`  
+4. Matching alerts are inserted into `security_monitoring.alerts`  
+
+---
+
+## 🛠️ Development & Debugging
+
+### Useful Commands
+
+Tail web app logs:
+```bash
 docker compose logs -f webapp
+```
 
-Tail alert worker logs
+Tail alert worker logs:
+```bash
 docker compose logs -f alertworker
+```
 
-Open Mongo shell
+Open MongoDB shell:
+```bash
 docker compose exec mongodb mongosh
+```
 
-Open Redis CLI
+Open Redis CLI:
+```bash
 docker compose exec redis redis-cli
+```
 
+---
 
-### Rebuilding
+### 🔁 Rebuilding Services
 
 If you change Python code or dependencies:
 
+```bash
 docker compose up --build webapp alertworker
-
-
----
-
-## Future improvements
-
-- Rule editor in the UI (CRUD for Mongo `alert_rules`).
-- Role-based access control for the dashboard.
-- More visualizations (top source IPs, countries, resources under attack).
-- Export and archival of alerts.
+```
 
 ---
 
-## License
+## 🔮 Future Improvements
+
+- Rule editor UI (CRUD for `alert_rules`)
+- Role-based access control (RBAC)
+- Advanced visualizations (top IPs, countries, attacked resources)
+- Alert export and archival
+
+---
+
+## 📜 License
 
 Add your preferred license here (MIT, Apache-2.0, etc.).
-
-
